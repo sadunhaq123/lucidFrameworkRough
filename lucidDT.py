@@ -29,6 +29,11 @@ df_train_all = pd.DataFrame()
 df_test_all  = pd.DataFrame()
 df_all  = pd.read_csv('final_dataset.csv')
 
+list_of_accuracies = []
+list_of_precisions = []
+list_of_recalls = []
+list_of_f_scores = []
+
 def compute_roc_auc_train(scaled_train_data_x, train_data_y):
     y_predict = rfc.predict_proba(scaled_train_data_x)[:,1]
     fpr, tpr, thresholds = roc_curve(train_data_y, y_predict)
@@ -139,14 +144,33 @@ for (train, test), i in zip(cv.split(X, y), range(4)):
 
 
 
-    precision = precision_score(test_data_y, y_pred, average='micro')
+    precision = precision_score(test_data_y, y_pred, average='macro')
     print('Precision: %.3f', precision)
     #recall = recall_score(test_data_y, y_pred)
-    recall = recall_score(test_data_y, y_pred, average='micro')
+    recall = recall_score(test_data_y, y_pred, average='macro')
     print('Recall: %.3f', recall)
     #score = f1_score(test_data_y, y_pred)
-    score = f1_score(test_data_y, y_pred, average='micro')
+    score = f1_score(test_data_y, y_pred, average='macro')
     print('F-Measure: %.3f', score)
+    list_of_accuracies.append(accuracy)
+    list_of_precisions.append(precision)
+    list_of_recalls.append(recall)
+    list_of_f_scores.append(score)
+
+print(tprs)
+# print(tprs.shape)
+print(fprs)
+# print(fprs.shape)
+
+accuracy_avg = sum(list_of_accuracies) / len(list_of_accuracies)
+precision_avg = sum(list_of_precisions) / len(list_of_precisions)
+recall_avg = sum(list_of_recalls) / len(list_of_recalls)
+f_score_avg = sum(list_of_f_scores) / len(list_of_f_scores)
+
+print("Accuracy Avg", round(accuracy_avg, 2))
+print("Precision Avg", round(precision_avg, 2))
+print("Recall Avg", round(recall_avg, 2))
+print("F-Score Avg", round(f_score_avg, 2))
 
 
 
@@ -160,8 +184,8 @@ def plot_roc_curve_simple(fprs, tprs):
     plt.xlabel('False positive rate')
     plt.ylabel('True positive rate')
     plt.title('ROC curve for Random Forest')
-    plt.legend(loc='best')
-    #plt.savefig('Authentication_Bypass_RF_yes_shuffle.png')
+    plt.legend(bbox_to_anchor=(1.05, 1.0), loc='upper left')
+    #plt.savefig('Authentication_Bypass_RF_yes_shuffle.png', bbox_inches='tight')
     plt.show()
 
 

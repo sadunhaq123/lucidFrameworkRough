@@ -3,7 +3,7 @@ import os
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import Normalizer
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, precision_score, recall_score, f1_score
 from sklearn import metrics
 from sklearn.preprocessing import OneHotEncoder
@@ -28,7 +28,6 @@ list_of_test  = [1,2,3,4]
 df_train_all = pd.DataFrame()
 df_test_all  = pd.DataFrame()
 df_all  = pd.read_csv('final_dataset.csv')
-
 list_of_accuracies = []
 list_of_precisions = []
 list_of_recalls = []
@@ -84,7 +83,7 @@ y = pd.DataFrame(train_data_y)
 
 #dict_weights = {0:16.10, 1:0.51}
 
-rfc = RandomForestClassifier(n_estimators=200, class_weight='balanced', n_jobs=-1)
+rfc = GaussianNB()
 parameters = {
     "n_estimators":[200, 200, 200, 200, 200],
     "max_features":[100, 200, 300, 400, 500]
@@ -120,17 +119,11 @@ for (train, test), i in zip(cv.split(X, y), range(4)):
 
     #print(type(scaled_train_data_x))
 
-
+    #rfc.fit(scaled_train_data_x, train_data_y)
     visualizer = ROCAUC(rfc, classes=[0, 1, 2, 3, 4])
-    fit_x  = visualizer.fit(scaled_train_data_x, train_data_y)  # Fit the training data to the visualizer
-    test_x = visualizer.score(scaled_test_data_x, test_data_y)  # Evaluate the model on the test data
-    print("F",fit_x)
-    print("T",test_x)
-    tprs.append(test_x)
-    fprs.append(1-test_x)
+    visualizer.fit(scaled_train_data_x, train_data_y)  # Fit the training data to the visualizer
+    visualizer.score(scaled_test_data_x, test_data_y)  # Evaluate the model on the test data
     visualizer.show()
-
-    # rfc.fit(scaled_train_data_x, train_data_y)
     #_, _, auc_score_train = compute_roc_auc_train(scaled_train_data_x, train_data_y)
     #fpr, tpr, auc_score = compute_roc_auc_test(scaled_test_data_x, test_data_y)
     #scores.append((auc_score_train, auc_score))
@@ -163,12 +156,6 @@ for (train, test), i in zip(cv.split(X, y), range(4)):
     list_of_recalls.append(recall)
     list_of_f_scores.append(score)
 
-
-print(tprs)
-#print(tprs.shape)
-print(fprs)
-#print(fprs.shape)
-
 accuracy_avg = sum(list_of_accuracies)/len(list_of_accuracies)
 precision_avg = sum(list_of_precisions)/len(list_of_precisions)
 recall_avg = sum(list_of_recalls)/len(list_of_recalls)
@@ -179,13 +166,11 @@ print("Precision Avg", round(precision_avg, 2))
 print("Recall Avg", round(recall_avg, 2))
 print("F-Score Avg", round(f_score_avg, 2))
 
-#exit()
-
 def plot_roc_curve_simple(fprs, tprs):
     plt.figure(figsize=(8,8))
     for i in range(len(fprs)):
         roc_auc = auc(fprs[i], tprs[i])
-        #ysmoothed = gaussian_filter1d(tprs[i], sigma=2)
+        ysmoothed = gaussian_filter1d(tprs[i], sigma=2)
         plt.plot(fprs[i], tprs[i], label='ROC fold %d (AUC = %0.2f)' % (i+1, roc_auc))
         i +=1
     plt.xlabel('False positive rate')
